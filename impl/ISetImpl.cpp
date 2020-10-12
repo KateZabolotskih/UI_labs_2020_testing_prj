@@ -22,7 +22,7 @@ namespace {
     class ISetImpl : public ISet {
     private:
         size_t _dim {0};
-        std::vector<IVector *> _data{nullptr};
+        std::vector<IVector *> _data;
         ILogger * _logger {nullptr};
 
     public:
@@ -62,6 +62,10 @@ ReturnCode ISetImpl::insert(IVector const * vector, IVector::Norm norm, double a
         _data.push_back(vector->clone());
         _dim = vector->getDim();
         return ReturnCode::RC_SUCCESS;
+    } else {
+        if (_dim != vector->getDim()) {
+            return ReturnCode::RC_WRONG_DIM;
+        }
     }
 
     for (auto cur_vec : _data) {
@@ -82,6 +86,9 @@ ReturnCode ISetImpl::erase(IVector const * vector, IVector::Norm norm, double ac
         LOG(_logger, r_code)
         return r_code;
     }
+    if (vector->getDim() != _dim) {
+        return ReturnCode::RC_WRONG_DIM;
+    }
     if (accuracy < 0 || std::isnan(accuracy)) {
         LOG(_logger, ReturnCode::RC_INVALID_PARAMS)
         return ReturnCode::RC_INVALID_PARAMS;
@@ -91,32 +98,23 @@ ReturnCode ISetImpl::erase(IVector const * vector, IVector::Norm norm, double ac
         return ReturnCode::RC_ELEM_NOT_FOUND;
     }
 
-    size_t ind;
     bool found = false;
-
     for (auto cur_vec : _data) {
         bool equal = false;
         IVector::equals(cur_vec, vector, norm, accuracy, equal, _logger);
         if (equal) {
+            found = true;
             size_t cur_vec_ind;
             find(vector, norm, accuracy, cur_vec_ind);
             erase(cur_vec_ind);
+            break;
         }
     }
-
-    while (find(vector, norm, accuracy, ind) != ReturnCode::RC_ELEM_NOT_FOUND) {
-        if (r_code != ReturnCode::RC_SUCCESS) {
-            LOG(_logger, r_code)
-            return r_code;
-        }
-        found = true;
-        r_code = erase(ind);
-        if (r_code != ReturnCode::RC_SUCCESS) {
-            return r_code;
-        }
+    if (!found) {
+        return ReturnCode::RC_ELEM_NOT_FOUND;
+    } else {
+        return ReturnCode::RC_SUCCESS;
     }
-
-    return found ? ReturnCode::RC_SUCCESS : ReturnCode::RC_ELEM_NOT_FOUND;
 }
 
 ReturnCode ISetImpl::erase(size_t index) {
