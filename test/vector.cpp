@@ -59,8 +59,8 @@ ReturnCode _mul_test() {
     double data2[4] =               { 3.6,    2.11,  5.443,  0.76  };
     double sum = 0;
 
-    for (int i = 0, j = 0; i < dim, j < dim; i++, j++) {
-        sum += data1[i] * data2[j];
+    for (int i = 0; i < dim; i++) {
+        sum += data1[i] * data2[i];
     }
 
     IVector * vec1 = IVector::createVector(dim, data1, nullptr);
