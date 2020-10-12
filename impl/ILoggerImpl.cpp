@@ -10,13 +10,15 @@ namespace {
     protected:
         static LoggerImpl * _instance;
         FILE * _log_file{nullptr};
-        set<void *> _clients;
+        set<void *> _clients{nullptr};
     public:
         static ILogger * getLogger(void * client);
-        void log(const char *message, ReturnCode returnCode) override;
-        void releaseLogger(void *client) override;
-        ReturnCode setLogFile(const char *logFileName) override;
-        ~LoggerImpl() override;
+
+        void log(const char * message, ReturnCode returnCode)    override;
+        void releaseLogger(void * client)                        override;
+        ReturnCode setLogFile(const char * logFileName)          override;
+
+        ~LoggerImpl()                                           override;
     };
     LoggerImpl * LoggerImpl::_instance = nullptr;
 }
@@ -52,7 +54,7 @@ ILogger * LoggerImpl::getLogger(void *client) {
     return _instance;
 }
 
-void LoggerImpl::log(const char *message, ReturnCode returnCode) {
+void LoggerImpl::log(const char * message, ReturnCode returnCode) {
     if (!_instance) {
         return;
     }
@@ -63,7 +65,7 @@ void LoggerImpl::log(const char *message, ReturnCode returnCode) {
 
 }
 
-void LoggerImpl::releaseLogger(void *client) {
+void LoggerImpl::releaseLogger(void * client) {
     if (!_instance) {
         return;
     }
@@ -79,16 +81,7 @@ void LoggerImpl::releaseLogger(void *client) {
     }
 }
 
-LoggerImpl::~LoggerImpl() {
-    if (!_instance) {
-        return;
-    }
-    fflush(_log_file);
-    if (_log_file != stdout)
-        fclose(_log_file);
-}
-
-ReturnCode LoggerImpl::setLogFile(const char *logFileName) {
+ReturnCode LoggerImpl::setLogFile(const char * logFileName) {
     if (!_instance) {
         return ReturnCode::RC_NULL_PTR;
     }
@@ -103,4 +96,13 @@ ReturnCode LoggerImpl::setLogFile(const char *logFileName) {
         }
     }
     return ReturnCode::RC_SUCCESS;
+}
+
+LoggerImpl::~LoggerImpl() {
+    if (!_instance) {
+        return;
+    }
+    fflush(_log_file);
+    if (_log_file != stdout)
+        fclose(_log_file);
 }
