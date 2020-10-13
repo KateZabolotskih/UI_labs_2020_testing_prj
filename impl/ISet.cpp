@@ -36,16 +36,14 @@ ISet * ISet::_union(ISet const * set1, ISet const * set2, IVector::Norm norm, do
 
     ISet * union_set = set1->clone();
     IVector * cur_vec = nullptr;
-    size_t cur_vec_ind = 0;
 
-    while (r_code != ReturnCode::RC_OUT_OF_BOUNDS) {
-        r_code = set2->get(cur_vec, cur_vec_ind);
+    for (size_t ind = 0; ind < set2->getSize(); ind++) {
+        r_code = set2->get(cur_vec, ind);
         if (validateVector(cur_vec) == ReturnCode::RC_SUCCESS) {
             union_set->insert(cur_vec, norm, accuracy);
             delete cur_vec;
             cur_vec = nullptr;
         }
-        cur_vec_ind++;
     }
     return union_set;
 }
@@ -59,16 +57,14 @@ ISet * ISet::difference(ISet const * minuend, ISet const * subtrahend, IVector::
 
     ISet * diff_set = minuend->clone();
     IVector * cur_vec = nullptr;
-    size_t cur_vec_ind = 0;
 
-    while (r_code != ReturnCode::RC_OUT_OF_BOUNDS) {
-        r_code = subtrahend->get(cur_vec, cur_vec_ind);
+    for (size_t ind = 0; ind < subtrahend->getSize(); ind++) {
+        r_code = subtrahend->get(cur_vec, ind);
         if (validateVector(cur_vec) == ReturnCode::RC_SUCCESS) {
             diff_set->erase(cur_vec, norm, accuracy);
             delete cur_vec;
             cur_vec = nullptr;
         }
-        cur_vec_ind++;
     }
     return diff_set;
 }
@@ -98,23 +94,20 @@ ISet * ISet::intersection(ISet const * set1, ISet const * set2, IVector::Norm no
         return nullptr;
     }
 
-    ISet * result = set1->clone();
+    ISet * inter_set = set1->clone();
     IVector * cur_vec = nullptr;
-    size_t cur_vec_ind = 0;
 
-    while (r_code != ReturnCode::RC_OUT_OF_BOUNDS)
-    {
-        r_code = set1->get(cur_vec, cur_vec_ind);
+    for (size_t ind = 0; ind < set1->getSize(); ind++) {
+        r_code = set1->get(cur_vec, ind);
         if (validateVector(cur_vec) == ReturnCode::RC_SUCCESS) {
-            size_t ind;
             if (set2->find(cur_vec, norm, accuracy, ind) != ReturnCode::RC_SUCCESS) {
-                result->erase(cur_vec, norm, accuracy);
+                inter_set->erase(ind);
             }
             delete cur_vec;
             cur_vec = nullptr;
         }
     }
-    return result;
+    return inter_set;
 }
 
 ISet::~ISet() {}
