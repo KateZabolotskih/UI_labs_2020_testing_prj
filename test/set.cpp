@@ -168,6 +168,9 @@ ReturnCode _erase_byInd_test() {
         return ReturnCode::RC_UNKNOWN;
     }
 
+    delete set;
+    clear_vecs(vec_s);
+    vec_s.clear();
     return ReturnCode::RC_SUCCESS;
 }
 
@@ -201,6 +204,9 @@ ReturnCode _find_test() {
     if (r_code != ReturnCode::RC_SUCCESS) {
         return ReturnCode::RC_UNKNOWN;
     }
+    delete set;
+    clear_vecs(vec_s);
+    vec_s.clear();
     return ReturnCode::RC_SUCCESS;
 }
 
@@ -229,6 +235,11 @@ ReturnCode _union_test() {
     if (uni_set->getSize() != 5) {
         return ReturnCode::RC_UNKNOWN;
     }
+    delete set_1;
+    delete set_2;
+    delete uni_set;
+    clear_vecs(vec_s);
+    vec_s.clear();
     return ReturnCode::RC_SUCCESS;
 }
 
@@ -263,6 +274,12 @@ ReturnCode _diff_test() {
         return ReturnCode::RC_UNKNOWN;
     }
 
+    delete set_1;
+    delete set_2;
+    delete diff_set;
+    delete diff_set_extra;
+    clear_vecs(vec_s);
+    vec_s.clear();
     return ReturnCode::RC_SUCCESS;
 }
 
@@ -309,6 +326,12 @@ ReturnCode _intersection_test() {
         return ReturnCode::RC_UNKNOWN;
     }
 
+    delete set_1;
+    delete set_2;
+    delete inter_set;
+    delete inter_set_extra;
+    clear_vecs(vec_s);
+    vec_s.clear();
     return ReturnCode::RC_SUCCESS;
 }
 
@@ -352,6 +375,14 @@ ReturnCode _symmDiff_test() {
         return ReturnCode::RC_UNKNOWN;
     }
 
+    delete set_1;
+    delete set_2;
+    delete summDiff_set;
+    delete summDiff_set_extra;
+    clear_vecs(vec_s);
+    vec_s.clear();
+    delete vec_1;
+    delete vec_2;
     return ReturnCode::RC_SUCCESS;
 }
 
@@ -380,6 +411,10 @@ ReturnCode _clone_test() {
             return ReturnCode::RC_UNKNOWN;
         }
     }
+    delete set_1;
+    delete set_2;
+    clear_vecs(vecs);
+    vecs.clear();
     return ReturnCode::RC_SUCCESS;
 }
 
@@ -395,38 +430,37 @@ void set_testing_run() {
         flag = 1;
         std::cout << "set erase vector test failed" << std::endl;
     }
-   if ( _erase_byInd_test() != ReturnCode::RC_SUCCESS) {
-       flag = 1;
-       std::cout << "set erase vector by index test failed" << std::endl;
-   }
-   if (_find_test() != ReturnCode::RC_SUCCESS) {
-       flag = 1;
-       std::cout << "set find test failed" << std::endl;
-   }
-   if (_union_test() != ReturnCode::RC_SUCCESS) {
-       flag = 1;
-       std::cout << "set union test failed" << std::endl;
-   }
-   if (_diff_test() != ReturnCode::RC_SUCCESS) {
-       flag = 1;
-       std::cout << "set difference test failed" << std::endl;
-   }
-   if (_symmDiff_test() != ReturnCode::RC_SUCCESS) {
-       flag = 1;
-       std::cout << "set symmetric difference test failed" << std::endl;
-   }
-   if (_insert_test() != ReturnCode::RC_SUCCESS) {
-       flag = 1;
-       std::cout << "set symmetric difference test failed" << std::endl;
-   }
-   if (_clone_test() != ReturnCode::RC_SUCCESS) {
-       flag = 1;
-       std::cout << "set symmetric difference test failed" << std::endl;
-   }
-   if (flag == 0) {
-       std::cout << "ISet testing passed successfully" << std::endl;
-   } else {
-       std::cout << "ISet testing failed" << std::endl;
-   }
+    if ( _erase_byInd_test() != ReturnCode::RC_SUCCESS) {
+        flag = 1;
+        std::cout << "set erase vector by index test failed" << std::endl;
+    }
+    if (_find_test() != ReturnCode::RC_SUCCESS) {
+        flag = 1;
+        std::cout << "set find test failed" << std::endl;
+    }
+    if (_union_test() != ReturnCode::RC_SUCCESS) {
+        flag = 1;
+        std::cout << "set union test failed" << std::endl;
+    }
+    if (_diff_test() != ReturnCode::RC_SUCCESS) {
+        flag = 1;
+        std::cout << "set difference test failed" << std::endl;
+    }
+    if (_symmDiff_test() != ReturnCode::RC_SUCCESS) {
+        flag = 1;
+        std::cout << "set symmetric difference test failed" << std::endl;
+    }
+    if (_insert_test() != ReturnCode::RC_SUCCESS) {
+        flag = 1;
+        std::cout << "set symmetric difference test failed" << std::endl;
+    }
+    if (_clone_test() != ReturnCode::RC_SUCCESS) {
+        flag = 1;
+        std::cout << "set symmetric difference test failed" << std::endl;
+    }
+    if (flag == 0) {
+        std::cout << "ISet testing passed successfully" << std::endl;
+    } else {
+        std::cout << "ISet testing failed" << std::endl;
+    }
 }
-
