@@ -34,7 +34,8 @@ ReturnCode _insert_test() {
     double accuracy;
 
     getParams(vec_s, accuracy, norm);
-    ISet * set = ISet::createSet(nullptr);
+
+    ISet * set = ISet::createSet();
 
     auto r_code = set->insert(vec_s[0], norm, accuracy);
     if (r_code != ReturnCode::RC_SUCCESS || set->getDim() != vec_s[0]->getDim()) {
@@ -63,7 +64,7 @@ ReturnCode _insert_test() {
     return ReturnCode::RC_SUCCESS;
 }
 
-ReturnCode _erase_byInd_test() {
+ReturnCode _erase_byVec_test() {
     std::vector<IVector *> vec_s;
     IVector::Norm norm;
     double accuracy;
@@ -96,19 +97,115 @@ ReturnCode _erase_byInd_test() {
     return ReturnCode::RC_SUCCESS;
 }
 
-ReturnCode _erase_byVec_test() {
+ReturnCode _erase_byInd_test() {
+    std::vector<IVector *> vec_s;
+    IVector::Norm norm;
+    double accuracy;
 
+    getParams(vec_s, accuracy, norm);
+    ISet * set = ISet::createSet(nullptr);
+
+    set->insert(vec_s[3], norm, accuracy);
+    set->insert(vec_s[4], norm, accuracy);
+
+    size_t index;
+    ReturnCode r_code = set->find(vec_s[3], norm, accuracy, index);
+    if (r_code == ReturnCode::RC_SUCCESS) {
+        r_code = set->erase(index);
+        if (r_code != ReturnCode::RC_SUCCESS || set->getSize() != 1) {
+            return ReturnCode::RC_UNKNOWN;
+        }
+    } else {
+        return ReturnCode::RC_UNKNOWN;
+    }
+
+    r_code = set->erase(10);
+    if (r_code == ReturnCode::RC_SUCCESS) {
+        return ReturnCode::RC_UNKNOWN;
+    }
+
+    r_code = set->find(vec_s[4], norm, accuracy, index);
+    if (r_code == ReturnCode::RC_SUCCESS) {
+        r_code = set->erase(index);
+        if (r_code != ReturnCode::RC_SUCCESS || set->getSize() != 0) {
+            return ReturnCode::RC_UNKNOWN;
+        }
+    } else {
+        return ReturnCode::RC_UNKNOWN;
+    }
+
+    return ReturnCode::RC_SUCCESS;
+}
+
+ReturnCode _find_test() {
+    std::vector<IVector *> vec_s;
+    IVector::Norm norm;
+    double accuracy;
+
+    getParams(vec_s, accuracy, norm);
+    ISet * set = ISet::createSet(nullptr);
+
+    set->insert(vec_s[3], norm, accuracy);
+    set->insert(vec_s[4], norm, accuracy);
+
+    size_t index;
+    ReturnCode r_code = set->find(vec_s[3], norm, accuracy, index);
+    if (r_code != ReturnCode::RC_SUCCESS) {
+        return ReturnCode::RC_UNKNOWN;
+    }
+
+    r_code = set->find(vec_s[1], norm, accuracy, index);
+    if (r_code == ReturnCode::RC_SUCCESS) {
+        return ReturnCode::RC_UNKNOWN;
+    }
+    r_code = set->find(nullptr, norm, accuracy, index);
+    if (r_code == ReturnCode::RC_SUCCESS) {
+        return ReturnCode::RC_UNKNOWN;
+    }
+    r_code = set->find(vec_s[3], norm, accuracy, index);
+    if (r_code != ReturnCode::RC_SUCCESS) {
+        return ReturnCode::RC_UNKNOWN;
+    }
     return ReturnCode::RC_SUCCESS;
 }
 
 ReturnCode _union_test() {
+    std::vector<IVector *> vec_s;
+    IVector::Norm norm;
+    double accuracy;
+
+    getParams(vec_s, accuracy, norm);
+    ISet * set = ISet::createSet(nullptr);
+
+    set->insert(vec_s[3], norm, accuracy);
+    set->insert(vec_s[4], norm, accuracy);
+
+    size_t index;
+    ReturnCode r_code = set->find(vec_s[3], norm, accuracy, index);
+    if (r_code != ReturnCode::RC_SUCCESS) {
+        return ReturnCode::RC_UNKNOWN;
+    }
+
+    r_code = set->find(vec_s[1], norm, accuracy, index);
+    if (r_code == ReturnCode::RC_SUCCESS) {
+        return ReturnCode::RC_UNKNOWN;
+    }
+    r_code = set->find(nullptr, norm, accuracy, index);
+    if (r_code == ReturnCode::RC_SUCCESS) {
+        return ReturnCode::RC_UNKNOWN;
+    }
+    r_code = set->find(vec_s[3], norm, accuracy, index);
+    if (r_code != ReturnCode::RC_SUCCESS) {
+        return ReturnCode::RC_UNKNOWN;
+    }
     return ReturnCode::RC_SUCCESS;
 
+    return ReturnCode::RC_SUCCESS;
 }
 
 ReturnCode _diff_test() {
-    return ReturnCode::RC_SUCCESS;
 
+    return ReturnCode::RC_SUCCESS;
 }
 
 ReturnCode _symmDiff_test() {
@@ -119,10 +216,6 @@ ReturnCode _symmDiff_test() {
 ReturnCode _intersection_test() {
     return ReturnCode::RC_SUCCESS;
 
-}
-
-ReturnCode _find_test() {
-    return ReturnCode::RC_SUCCESS;
 }
 
 ReturnCode _clone_test() {
@@ -140,12 +233,20 @@ void set_testing_run() {
     }
     if (_erase_byVec_test() != ReturnCode::RC_SUCCESS) {
         flag = 1;
-        std::cout << "set erase test failed" << std::endl;
+        std::cout << "set erase vector test failed" << std::endl;
     }
-    if (flag == 0) {
-        std::cout << "ISet testing passed successfully" << std::endl;
-    } else {
-        std::cout << "ISet testing failed" << std::endl;
-    }
+   if ( _erase_byInd_test() != ReturnCode::RC_SUCCESS) {
+       flag = 1;
+       std::cout << "set erase vector by index test failed" << std::endl;
+   }
+   if (_find_test() != ReturnCode::RC_SUCCESS) {
+       flag = 1;
+       std::cout << "set find test failed" << std::endl;
+   }
+   if (flag == 0) {
+       std::cout << "ISet testing passed successfully" << std::endl;
+   } else {
+       std::cout << "ISet testing failed" << std::endl;
+   }
 }
 

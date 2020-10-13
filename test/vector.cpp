@@ -78,24 +78,24 @@ void vector_testing_run() {
    int flag = 0;
    if (_add_test() != ReturnCode::RC_SUCCESS) {
        flag = 1;
-       std::cout << "vector addition testing failed" << std::endl;
+       std::cout << "vector addition testing failed" << std::endl << std::flush;
    }
    if (_sub_test() != ReturnCode::RC_SUCCESS) {
        flag = 1;
-       std::cout << "vector subtraction testing failed" << std::endl;
+       std::cout << "vector subtraction testing failed" << std::endl << std::flush;
    }
    if (_mul_onScale_test() != ReturnCode::RC_SUCCESS) {
        flag = 1;
-       std::cout << "vector multiplication on scale testing failed" << std::endl;
+       std::cout << "vector multiplication on scale testing failed" << std::endl << std::flush;
    }
    if (_mul_test() != ReturnCode::RC_SUCCESS) {
        flag = 1;
-       std::cout << "vector multiplication testing failed" << std::endl;
+       std::cout << "vector multiplication testing failed" << std::endl << std::flush;
    }
     if (flag == 0) {
-        std::cout << "IVector testing passed successfully" << std::endl;
+        std::cout << "IVector testing passed successfully" << std::endl << std::flush;
     } else {
-        std::cout << "IVector testing failed" << std::endl;
+        std::cout << "IVector testing failed" << std::endl << std::flush;
     }
 }
 
