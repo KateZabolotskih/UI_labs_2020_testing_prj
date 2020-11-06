@@ -39,8 +39,8 @@ namespace {
         IVector * getBegin()                                        const override;
         IVector * getEnd()                                          const override;
         ReturnCode contains(IVector const * vec, bool & result)     const override;
-        ReturnCode isSubset(ICompact const * comp, bool & result)   const override;
-        ReturnCode intersects(ICompact const * comp, bool & result) const override;
+        ReturnCode isSubset(ICompact const * anotherCopm, bool & result)   const override;
+        ReturnCode intersects(ICompact const * anotherCopm, bool & result) const override;
         size_t getDim() const override;
 
         ICompactImpl(IVector const * begin, IVector const * end, double accuracy);
@@ -114,16 +114,17 @@ ReturnCode ICompactImpl::IteratorImpl::doStep() {
     size_t cur_axis = 0;
     double new_value;
     for (size_t i = 0; i < _begin->getDim(); i++) {
-        new_value = _cur_point->getCoord(i) + _orientation * _step->getCoord(i);
-        if (_orientation == INVERSE && new_value < _begin->getCoord(i)) {
-            _cur_point->setCoord(i, _end->getCoord(i));
+        size_t d = _direction[i];
+        new_value = _cur_point->getCoord(d) + _orientation * _step->getCoord(d);
+        if (_orientation == INVERSE && new_value < _begin->getCoord(d)) {
+            _cur_point->setCoord(d, _end->getCoord(d));
         }
-        if (_orientation == EXPLICIT && new_value > _end->getCoord(i)) {
-            _cur_point->setCoord(i, _begin->getCoord(i));
+        if (_orientation == EXPLICIT && new_value > _end->getCoord(d)) {
+            _cur_point->setCoord(d, _begin->getCoord(d));
         }
         else {
-            _cur_point->setCoord(i, new_value);
-            cur_axis = i;
+            _cur_point->setCoord(d, new_value);
+            cur_axis = d;
             break;
         }
     }
@@ -145,8 +146,20 @@ IVector * ICompactImpl::IteratorImpl::getPoint() const {
     return _cur_point->clone();
 }
 
-static IVector * buildStep(IVector const * step, size_t dim, ILogger * logger) {
+static ReturnCode checkStep(IVector const * step, size_t dim, ILogger * logger) {
+    if (step->getDim() != dim) {
+        LOG(logger, ReturnCode::RC_WRONG_DIM);
+        return ReturnCode::RC_WRONG_DIM;
+    }
 
+    for (size_t i = 0; i < dim; ++i) {
+        if (step->getCoord(i) <= 0.0) {
+            LOG(logger, ReturnCode::RC_INVALID_PARAMS);
+            return ReturnCode::RC_INVALID_PARAMS;
+        }
+    }
+
+    return ReturnCode::RC_SUCCESS;
 }
 
 static ICompact::Iterator* createIterator(IVector const * _begin, IVector const * _end, IVector const * _step, SEQUENCE orientation, ILogger * logger) {
@@ -168,10 +181,15 @@ static ICompact::Iterator* createIterator(IVector const * _begin, IVector const 
         return nullptr;
     }
 
-    IVector * step = buildStep(_step, begin->getDim(), logger);
-    if (step == nullptr) {
-        delete begin;
-        delete end;
+    IVector * step;
+    if (checkStep(_step, _begin->getDim(), logger) == ReturnCode::RC_SUCCESS) {
+        step = _step->clone();
+        if (step == nullptr) {
+            delete begin;
+            delete end;
+            return nullptr;
+        }
+    } else {
         return nullptr;
     }
 
@@ -179,14 +197,12 @@ static ICompact::Iterator* createIterator(IVector const * _begin, IVector const 
     for (size_t cur_axis = 0; cur_axis < begin->getDim(); cur_axis++) {
         direction[cur_axis] = cur_axis;
     }
-
     ICompact::Iterator * iterator = new(std::nothrow) ICompactImpl::IteratorImpl(begin, end, step, direction, orientation);
     if (iterator == nullptr) {
         delete begin;
         delete end;
         delete step;
     }
-
     return iterator;
 }
 
@@ -212,15 +228,69 @@ IVector * ICompactImpl::getEnd() const {
 }
 
 ReturnCode ICompactImpl::contains(IVector const * vec, bool & result) const {
+    if (vec == nullptr){
+        LOG(_logger, ReturnCode::RC_NULL_PTR);
+        return ReturnCode::RC_NULL_PTR;
+    }
+    if (vec->getDim() != _dim) {
+        LOG(_logger, ReturnCode::RC_WRONG_DIM);
+        return ReturnCode::RC_WRONG_DIM;
+    }
+    for (int i = 0; i < _dim; i++) {
+        if (vec->getCoord(i) < _begin->getCoord(i) || vec->getCoord(i) > _end->getCoord(i)) {
+            result = false;
+            return ReturnCode::RC_SUCCESS;
+        }
+    }
+    result = true;
+    return ReturnCode::RC_SUCCESS;
+}
+static ReturnCode checkComp(ICompact const * anotherCopm, size_t dim, ILogger * logger) {
+    if (anotherCopm == nullptr) {
+        LOG(logger, ReturnCode::RC_NULL_PTR);
+        return ReturnCode::RC_NULL_PTR;
+    }
 
+    if (anotherCopm->getDim() != dim) {
+        LOG(logger, ReturnCode::RC_WRONG_DIM);
+        return ReturnCode::RC_WRONG_DIM;
+    }
+}
+ReturnCode ICompactImpl::isSubset(ICompact const * anotherCopm, bool & result) const {
+    ReturnCode rc = checkComp(anotherCopm, _dim, _logger);
+    if (rc != ReturnCode::RC_SUCCESS) {
+        return rc;
+    }
+    bool contains_begin, contains_end;
+    if ((rc = anotherCopm->contains(_begin, contains_begin)) != ReturnCode::RC_SUCCESS ||
+            (rc = anotherCopm->contains(_end, contains_end)) != ReturnCode::RC_SUCCESS) {
+        return rc;
+    }
+    if (contains_end == true && contains_begin == true) {
+        result = true;
+    } else {
+        result = false;
+    }
+    return ReturnCode::RC_SUCCESS;
 }
 
-ReturnCode ICompactImpl::isSubset(ICompact const * other, bool & result) const {
+ReturnCode ICompactImpl::intersects(ICompact const * anotherCopm, bool & result) const {
+    ReturnCode rc = checkComp(anotherCopm, _dim, _logger);
+    if (rc != ReturnCode::RC_SUCCESS) {
+        return rc;
+    }
+    auto * anotherComp_begin = anotherCopm->getBegin();
+    auto * anotherComp_end = anotherCopm->getEnd();
 
-}
-
-ReturnCode ICompactImpl::intersects(ICompact const * other, bool & result) const {
-
+    result = true;
+    for (size_t i = 0; i < _dim; ++i) {
+        double max_begin = std::max(anotherComp_begin->getCoord(i), _begin->getCoord(i));
+        double min_end = std::min(anotherComp_end->getCoord(i), _end->getCoord(i));
+        if (max_begin > min_end) {
+            result = false;
+        }
+    }
+    return ReturnCode::RC_SUCCESS;
 }
 
 size_t ICompactImpl::getDim() const {
