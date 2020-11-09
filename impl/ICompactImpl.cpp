@@ -290,6 +290,8 @@ ReturnCode ICompactImpl::intersects(ICompact const * anotherCopm, bool & result)
             result = false;
         }
     }
+    delete anotherComp_begin;
+    delete anotherComp_end;
     return ReturnCode::RC_SUCCESS;
 }
 
