@@ -1,9 +1,8 @@
 #include "../headers/ICompact.h"
 #include "ICompactImpl.cpp"
-#include <cmath>    // fabs (C++11), isnan
-#include <new>      // nothrow
-#include <algorithm>// min, max
-#include <assert.h> // assert
+#include <cmath>
+#include <new>
+#include <algorithm>
 
 
 static ReturnCode validateCompacts(const ICompact * compact1, const ICompact * compact2, double accuracy = 0) {
@@ -26,7 +25,7 @@ static ReturnCode validateCompacts(const ICompact * compact1, const ICompact * c
     return ReturnCode::RC_SUCCESS;
 }
 
-static ReturnCode validateVecs(const IVector * vec1, const IVector * vec2, double accuracy = 0) {
+static ReturnCode validateVecs(const IVector * vec1, const IVector * vec2) {
     if (!vec2 || !vec1) {
         return ReturnCode::RC_NULL_PTR;
     }
@@ -52,7 +51,7 @@ ICompact * ICompact::createCompact(IVector const * begin, IVector const * end, d
         LOG(logger, ReturnCode::RC_WRONG_DIM);
         return nullptr;
     }
-    for (int i = 0; i < begin->getDim(); ++i) {
+    for (int i = 0; i < begin->getDim(); i++) {
         if (end->getCoord(i) - begin->getCoord(i) < accuracy) {
             LOG(logger, ReturnCode::RC_INVALID_PARAMS);
             return nullptr;
@@ -90,7 +89,7 @@ ICompact * ICompact::createCompact(IVector const * begin, IVector const * end, d
 
 static bool areCollinear (IVector * vec1, IVector * vec2, double accuracy, size_t & axesNum) {
     size_t numCoords = 0;
-    for (int i = 0; i < vec1->getDim(); ++i) {
+    for (int i = 0; i < vec1->getDim(); i++) {
         if (std::fabs(vec1->getCoord(i) - vec2->getCoord(i)) < accuracy) {
             numCoords++;
         } else {
@@ -166,8 +165,8 @@ ICompact * ICompact::_union(ICompact const * comp1, ICompact const * comp2, doub
         return nullptr;
     }
     bool intersects;
-    comp1->intersects(comp2, intersects);
-    if (!intersects) {
+    r_code = comp1->intersects(comp2, intersects);
+    if (!intersects || r_code != ReturnCode::RC_SUCCESS) {
         LOG(logger, ReturnCode::RC_INVALID_PARAMS);
         delete begin1;
         delete begin2;
@@ -191,9 +190,94 @@ ICompact * ICompact::_union(ICompact const * comp1, ICompact const * comp2, doub
 }
 
 ICompact * ICompact::intersection(ICompact const * comp1, ICompact const * comp2, double accuracy, ILogger * logger) {
+    ReturnCode r_code = validateCompacts(comp1, comp2, accuracy);
+    if (r_code != ReturnCode::RC_SUCCESS) {
+        LOG(logger, r_code);
+        return nullptr;
+    }
+    IVector * begin1 = comp1->getBegin();
+    IVector * begin2 = comp2->getBegin();
+    r_code = validateVecs(begin1, begin2);
+    if (r_code != ReturnCode::RC_SUCCESS) {
+        LOG(logger, r_code);
+        delete begin1;
+        delete begin2;
+        return nullptr;
+    }
+    IVector * end1 = comp1->getEnd();
+    IVector * end2 = comp2->getEnd();
+    r_code = validateVecs(end1, end2);
+    if (r_code != ReturnCode::RC_SUCCESS) {
+        LOG(logger, r_code);
+        delete end1;
+        delete end2;
+        return nullptr;
+    }
 
+    bool intersects;
+    r_code = comp1->intersects(comp2, intersects);
+    if (!intersects || r_code != ReturnCode::RC_SUCCESS) {
+        LOG(logger, ReturnCode::RC_INVALID_PARAMS);
+        delete begin1;
+        delete begin2;
+        delete end1;
+        delete end2;
+        return nullptr;
+    }
+    size_t dim = comp1->getDim();
+    for (int i = 0; i < dim; i++) {
+        begin1->setCoord(i, std::max(begin1->getCoord(i), begin2->getCoord(i)));
+        end1->setCoord(i, std::min(end1->getCoord(i), end2->getCoord(i)));
+    }
+    ICompact * resComp = ICompact::createCompact(begin1, end1, accuracy);
+    if (!resComp) {
+        LOG(logger, ReturnCode::RC_NULL_PTR);
+    }
+
+    delete begin1;
+    delete begin2;
+    delete end1;
+    delete end2;
+    return resComp;
 }
 
-ICompact* ICompact::convex(ICompact const * comp1, ICompact const * comp2, double accuracy, ILogger * logger) {
+ICompact * ICompact::convex(ICompact const * comp1, ICompact const * comp2, double accuracy, ILogger * logger) {
+    ReturnCode r_code = validateCompacts(comp1, comp2);
+    if (r_code != ReturnCode::RC_SUCCESS) {
+        LOG(logger, r_code);
+        return nullptr;
+    }
+    IVector * begin1 = comp1->getBegin();
+    IVector * begin2 = comp2->getBegin();
+    r_code = validateVecs(begin1, begin2);
+    if (r_code != ReturnCode::RC_SUCCESS) {
+        LOG(logger, r_code);
+        delete begin1;
+        delete begin2;
+        return nullptr;
+    }
+    IVector * end1 = comp1->getEnd();
+    IVector * end2 = comp2->getEnd();
+    r_code = validateVecs(begin1, begin2);
+    if (r_code != ReturnCode::RC_SUCCESS) {
+        LOG(logger, r_code);
+        delete end1;
+        delete end2;
+        return nullptr;
+    }
 
+    size_t dim = begin1->getDim();
+    for (int i = 0; i < dim; i++) {
+        begin1->setCoord(i, std::min(begin1->getCoord(i), begin2->getCoord(i)));
+        end1->setCoord(i, std::max(end1->getCoord(i), end2->getCoord(i)));
+    }
+    ICompact * resComp = ICompact::createCompact(begin1, end1, accuracy);
+    if (!resComp) {
+        LOG(logger, ReturnCode::RC_NULL_PTR);
+    }
+    delete begin1;
+    delete begin2;
+    delete end1;
+    delete end2;
+    return resComp;
 }

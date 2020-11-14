@@ -5,7 +5,6 @@
 #include <assert.h> // assert
 namespace {
     enum SEQUENCE {INVERSE = -1, EXPLICIT = 1};
-    /* declaration */
     class ICompactImpl : public ICompact {
     private:
         size_t _dim {0};
@@ -152,7 +151,7 @@ static ReturnCode checkStep(IVector const * step, size_t dim, ILogger * logger) 
         return ReturnCode::RC_WRONG_DIM;
     }
 
-    for (size_t i = 0; i < dim; ++i) {
+    for (size_t i = 0; i < dim; i++) {
         if (step->getCoord(i) <= 0.0) {
             LOG(logger, ReturnCode::RC_INVALID_PARAMS);
             return ReturnCode::RC_INVALID_PARAMS;
@@ -162,7 +161,7 @@ static ReturnCode checkStep(IVector const * step, size_t dim, ILogger * logger) 
     return ReturnCode::RC_SUCCESS;
 }
 
-static ICompact::Iterator* createIterator(IVector const * _begin, IVector const * _end, IVector const * _step, SEQUENCE orientation, ILogger * logger) {
+static ICompact::Iterator * createIterator(IVector const * _begin, IVector const * _end, IVector const * _step, SEQUENCE orientation, ILogger * logger) {
     if (_begin == nullptr || _end == nullptr || _step == nullptr) {
         LOG(logger, ReturnCode::RC_NULL_PTR);
         return nullptr;
@@ -255,6 +254,7 @@ static ReturnCode checkComp(ICompact const * anotherCopm, size_t dim, ILogger * 
         LOG(logger, ReturnCode::RC_WRONG_DIM);
         return ReturnCode::RC_WRONG_DIM;
     }
+    return ReturnCode::RC_SUCCESS;
 }
 ReturnCode ICompactImpl::isSubset(ICompact const * anotherCopm, bool & result) const {
     ReturnCode rc = checkComp(anotherCopm, _dim, _logger);
