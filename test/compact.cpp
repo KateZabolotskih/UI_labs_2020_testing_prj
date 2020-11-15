@@ -122,8 +122,8 @@ ReturnCode compact_union_test() {
 
     double data5[dim3] = {0, 0, 0};
     double data6[dim3] = {1, 1, 1};
-    IVector * vec5 = IVector::createVector(dim2, data5);
-    IVector * vec6 = IVector::createVector(dim2, data6);
+    IVector * vec5 = IVector::createVector(dim3, data5);
+    IVector * vec6 = IVector::createVector(dim3, data6);
     ICompact * comp3 = ICompact::createCompact(vec5, vec6, accuracy);
 
     ICompact * _uF = ICompact::_union(comp1, comp3, accuracy);
@@ -163,8 +163,8 @@ ReturnCode compact_intersection_test() {
     IVector * vec2 = IVector::createVector(dim2, data2);
     ICompact * comp1 = ICompact::createCompact(vec1, vec2, accuracy);
 
-    double data3[dim2] = {0, 1};
-    double data4[dim2] = {3, 3};
+    double data3[dim2] = {1, 1.5};
+    double data4[dim2] = {3, 4};
     IVector * vec3 = IVector::createVector(dim2, data3);
     IVector * vec4 = IVector::createVector(dim2, data4);
     ICompact * comp2 = ICompact::createCompact(vec3, vec4, accuracy);
@@ -175,7 +175,7 @@ ReturnCode compact_intersection_test() {
     } else {
         IVector * begin = inter->getBegin();
         IVector * end = inter->getEnd();
-        if (begin->getCoord(0) != 0 || begin->getCoord(1) != 1 ||
+        if (begin->getCoord(0) != 1|| begin->getCoord(1) != 1.5 ||
             end->getCoord(0) != 2 || end->getCoord(1) != 2) {
             r_code = ReturnCode::RC_UNKNOWN;
         }
@@ -185,8 +185,8 @@ ReturnCode compact_intersection_test() {
 
     double data5[dim3] = {0, 0, 0};
     double data6[dim3] = {1, 1, 1};
-    IVector * vec5 = IVector::createVector(dim2, data5);
-    IVector * vec6 = IVector::createVector(dim2, data6);
+    IVector * vec5 = IVector::createVector(dim3, data5);
+    IVector * vec6 = IVector::createVector(dim3, data6);
     ICompact * comp3 = ICompact::createCompact(vec5, vec6, accuracy);
 
     ICompact * interF = ICompact::intersection(comp1, comp3, accuracy);
@@ -204,11 +204,80 @@ ReturnCode compact_intersection_test() {
     delete comp2;
     delete inter;
     return r_code;
-
 }
 
 ReturnCode compact_convex_test() {
-    return ReturnCode::RC_SUCCESS;
+    ReturnCode r_code = ReturnCode::RC_SUCCESS;
+    const double accuracy = 1e-4;
+    const size_t dim2 = 2, dim3 = 3;
+
+    double data1[dim2] = {0, 0};
+    double data2[dim2] = {2, 2};
+    IVector * vec1 = IVector::createVector(dim2, data1);
+    IVector * vec2 = IVector::createVector(dim2, data2);
+    ICompact * comp1 = ICompact::createCompact(vec1, vec2, accuracy);
+
+    double data3[dim2] = {1, 1.5};
+    double data4[dim2] = {3, 4};
+    IVector * vec3 = IVector::createVector(dim2, data3);
+    IVector * vec4 = IVector::createVector(dim2, data4);
+    ICompact * comp2 = ICompact::createCompact(vec3, vec4, accuracy);
+
+    ICompact * conv = ICompact::convex(comp1, comp2, accuracy);
+    if (conv == nullptr) {
+        r_code = ReturnCode::RC_UNKNOWN;
+    } else {
+        IVector * begin = conv->getBegin();
+        IVector * end = conv->getEnd();
+        if (begin->getCoord(0) != 0 || begin->getCoord(1) != 0 ||
+            end->getCoord(0) != 3 || end->getCoord(1) != 4) {
+            r_code = ReturnCode::RC_UNKNOWN;
+        }
+        delete begin;
+        delete end;
+    }
+
+    double data5[dim2] = {1, 0};
+    double data6[dim2] = {3, 3};
+    IVector * vec5 = IVector::createVector(dim2, data5);
+    IVector * vec6 = IVector::createVector(dim2, data6);
+    ICompact * comp3 = ICompact::createCompact(vec5, vec6, accuracy);
+
+    double data7[dim2] = {0.5, 0.5};
+    double data8[dim2] = {2.5, 3};
+    IVector * vec7 = IVector::createVector(dim2, data7);
+    IVector * vec8 = IVector::createVector(dim2, data8);
+    ICompact * comp4 = ICompact::createCompact(vec7, vec8, accuracy);
+
+    ICompact * conv2 = ICompact::convex(comp3, comp4, accuracy);
+    if (conv == nullptr) {
+        r_code = ReturnCode::RC_UNKNOWN;
+    } else {
+        IVector * begin = conv2->getBegin();
+        IVector * end = conv2->getEnd();
+        if (begin->getCoord(0) != 0.5 || begin->getCoord(1) != 0 ||
+            end->getCoord(0) != 3 || end->getCoord(1) != 3) {
+            r_code = ReturnCode::RC_UNKNOWN;
+        }
+        delete begin;
+        delete end;
+    }
+
+    delete vec1;
+    delete vec2;
+    delete vec3;
+    delete vec4;
+    delete vec5;
+    delete vec6;
+    delete vec7;
+    delete vec8;
+    delete comp1;
+    delete comp2;
+    delete comp3;
+    delete comp4;
+    delete conv;
+    delete conv2;
+    return r_code;
 }
 
 void compact_testing_run() {

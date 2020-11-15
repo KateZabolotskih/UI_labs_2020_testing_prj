@@ -100,7 +100,7 @@ static bool areCollinear (IVector * vec1, IVector * vec2, double accuracy, size_
 }
 
 ICompact * ICompact::_union(ICompact const * comp1, ICompact const * comp2, double accuracy, ILogger * logger) {
-    auto r_code = validateCompacts(comp1, comp2, accuracy);
+    ReturnCode r_code = validateCompacts(comp1, comp2, accuracy);
     if (r_code != ReturnCode::RC_SUCCESS) {
         LOG(logger, r_code);
         return nullptr;
@@ -118,7 +118,7 @@ ICompact * ICompact::_union(ICompact const * comp1, ICompact const * comp2, doub
     }
     r_code = comp1->isSubset(comp2, issubset);
     if (r_code == ReturnCode::RC_SUCCESS && issubset) {
-        ICompact* result = comp2->clone();
+        ICompact * result = comp2->clone();
         if (result == nullptr) {
             LOG(logger, ReturnCode::RC_NO_MEM);
             return nullptr;
@@ -129,9 +129,9 @@ ICompact * ICompact::_union(ICompact const * comp1, ICompact const * comp2, doub
     IVector * begin2 = comp2->getBegin();
     r_code = validateVecs(begin1, begin2);
     if (r_code != ReturnCode::RC_SUCCESS) {
+        LOG(logger, r_code);
         delete begin1;
         delete begin2;
-        LOG(logger, r_code);
         return nullptr;
     }
     size_t beginAxes;
@@ -224,8 +224,8 @@ ICompact * ICompact::intersection(ICompact const * comp1, ICompact const * comp2
         delete end2;
         return nullptr;
     }
-    size_t dim = comp1->getDim();
-    for (int i = 0; i < dim; i++) {
+
+    for (int i = 0; i < comp1->getDim(); i++) {
         begin1->setCoord(i, std::max(begin1->getCoord(i), begin2->getCoord(i)));
         end1->setCoord(i, std::min(end1->getCoord(i), end2->getCoord(i)));
     }
@@ -266,8 +266,7 @@ ICompact * ICompact::convex(ICompact const * comp1, ICompact const * comp2, doub
         return nullptr;
     }
 
-    size_t dim = begin1->getDim();
-    for (int i = 0; i < dim; i++) {
+    for (int i = 0; i < begin1->getDim(); i++) {
         begin1->setCoord(i, std::min(begin1->getCoord(i), begin2->getCoord(i)));
         end1->setCoord(i, std::max(end1->getCoord(i), end2->getCoord(i)));
     }
